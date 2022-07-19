@@ -1,4 +1,5 @@
 import useSWR from 'swr'
+//import axios from '../libs/axios'
 import axios from 'axios'
 import { signOut, useSession as useSessionX } from 'next-auth/react'
 import { axiosPrivate } from '../libs/axios'
@@ -12,28 +13,14 @@ const fetcher = async (url: string) => {
       //console.log('session ', dayjs(res.data.accessTokenExpires).format('m:s'))
       if (res.data?.error === 'RefreshAccessTokenError') {
         console.log('error')
-        signOut() // display session expired
+        //if (res.status == 403) signOut() // display session expired
       }
       return res.data
     })
     .catch(e => {
       //console.log(e)
-      if (e.response.status == 422) {
-        // signOut() signout redirects to login page and also delete cookie
-      }
-    })
-  return res
-}
-
-const fetcher2 = async (url: string) => {
-  const { data: session, status } = useSessionX()
-  console.log(session)
-  const res = await axios
-    .get(url)
-    .then(res => res.data)
-    .catch(e => {
-      if (e.response.status == 422) {
-        // signOut() signout redirects to login page and also delete cookie
+      if (e.response.status == 403) {
+        signOut() //signout redirects to login page and also delete cookie
       }
     })
   return res
@@ -107,5 +94,31 @@ export async function apiRequest(url: string): Promise<void> {
     })
   } catch (error) {
     console.log(error)
+  }
+}
+
+export const fetcher2 = async (url: string) => {
+  const token = await fetcher('/api/auth/session')
+  const res = await axiosPrivate
+    .get(url, {
+      headers: {
+        Authorization: `Bearer ${token.accessToken}`,
+      },
+    })
+    .then(res => res.data)
+    .catch(e => {
+      console.log(e)
+      if (e.response.status == 422) {
+        // signOut() signout redirects to login page and also delete cookie
+      }
+    })
+  return res
+}
+export function useDevices() {
+  const { data, error } =  useSWR('/user/devices', fetcher2)
+  return {
+    devices: data,
+    isLoading: !error && !data,
+    isError: error,
   }
 }

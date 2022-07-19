@@ -1,0 +1,120 @@
+ async jwt({ token, user, account, profile }) {
+      //console.log( dayjs(Date.now()).format('m:s') , dayjs(token.accessTokenExpires).format('m:s'))
+
+      if (account && user) {
+        let data = {}
+        switch (account.provider) {
+          case 'google':
+            data = await googleAuthFlow(profile)
+            break
+          case 'facebook':
+            data = await faceBookAuthFlow(profile)
+            break
+          default:
+            data = user
+        }
+        token = {
+          refreshToken: data?.refreshToken,
+          accessToken: data?.accessToken,
+          accessTokenExpires: data?.accessTokenExpires,
+          type: data?.type,
+          user: data?.user,
+        }
+        await redis.set(`token:${token.user.id}`, JSON.stringify(token))
+        return token
+      }
+
+      // Return previous token if the access token has not expired yet
+      if (Date.now() < token.accessTokenExpires) {
+        return token
+      }
+
+      // Access token has expired, try to update it
+      // If we get here it means that the access_token is expired
+      return await redlock.using(
+        [token.user.id, 'jwt-refresh'],
+        5000,
+        async () => {
+          // Always get the refresh_token from redis, that's the source of truth
+          // NEVER get the refresh_token from the current jwt property
+          const redisToken = await redis.get(`token:${token.user.id}`)
+          const currentToken = JSON.parse(redisToken)
+
+          // This can happen when the there are multiple requests
+          // and the first request already refreshed the tokens
+          // so the consecutive requests already have access to the updated tokens
+          if (Date.now() < currentToken.accessTokenExpires) {
+            return currentToken
+          }
+
+          // If it's the first request to refresh the tokens then
+          // get your new tokens here, something like this:
+          const newTokens = await refreshAccessToken(currentToken)
+
+          // Save new jwt token object to redis for the next requests
+          await redis.set(
+            `token:${newTokens.user.id}`,
+            JSON.stringify(newTokens),
+          )
+
+          // Return new jwt token
+          return newTokens
+        },
+      )
+    },
+    async session({ session, token }) {
+      session.accessToken = token.accessToken
+      session.accessTokenExpires = token.accessTokenExpires
+      session.user = token.user
+      session.error = token.error
+      return session
+    },
+    async signIn({ account, profile }) {
+      if (account.provider === 'google') {
+        return profile.email_verified
+      }
+      return true // Do different verification for other providers that don't have `email_verified`
+    },
+  },
+
+
+  async jwt({ token, user, account, profile }) {
+      if (account && user) {
+        let data = {}
+        switch (account.provider) {
+          case 'google':
+            data = await googleAuthFlow(profile)
+            break
+          case 'facebook':
+            data = await faceBookAuthFlow(profile)
+            break
+          default:
+            data = user
+        }
+
+        token = {
+          refreshToken: data?.refreshToken,
+          accessToken: data?.accessToken,
+          tokenId: data?.tokenId,
+          accessTokenExpires: data?.accessTokenExpires,
+          type: data?.type,
+          user: data?.user,
+        }
+        return token
+      }
+
+      // Return previous token if the access token has not expired yet
+      const expires = dayjs(token.accessTokenExpires)
+      const diff = expires.diff(dayjs(),'second')  //dayjs().diff(expires, 'second')
+
+      if (diff > 0 ) {
+        console.log('not expired')
+        return token
+      }
+
+      // Access token has expired, try to update it
+      // If we get here it means that the access_token is expired
+      token = await refreshAccessToken(token)
+      console.log('refreshed')
+      return token
+    }

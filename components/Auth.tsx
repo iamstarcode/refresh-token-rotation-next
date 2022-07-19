@@ -25,6 +25,7 @@ export default function Auth({ children }: AuthProps) {
 
         if (!isLoading && hasUser && session?.error === "RefreshAccessTokenError") {
             signOut()
+          console.log('xzdsdxd')
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoading, hasUser])

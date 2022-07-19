@@ -19,12 +19,14 @@
     "@mantine/next": "^3.6.7",
     "axios": "^0.27.2",
     "dayjs": "^1.11.3",
+    "ioredis": "^5.2.0",
     "jotai": "^1.6.0",
     "next": "latest",
     "next-auth": "^4.2.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-use-cookie": "^1.4.0",
+    "redlock": "^5.0.0-beta.2",
     "swr": "^1.2.1"
   },
   "devDependencies": {
@@ -32,7 +34,7 @@
     "@babel/preset-react": "^7.16.0",
     "@babel/preset-typescript": "^7.16.0",
     "@emotion/babel-plugin": "^11.3.0",
-    "@types/node": "^16.11.6",
+    "@types/node": "^16.11.44",
     "@types/react": "^17.0.34",
     "babel-loader": "^8.2.3",
     "babel-plugin-macros": "^3.1.0",

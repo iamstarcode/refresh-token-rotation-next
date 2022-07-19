@@ -7,17 +7,27 @@ import {
   googleAuthFlow,
   faceBookAuthFlow,
 } from '../../../utils/AuthFlowHelpers'
+import * as dayjs from 'dayjs'
 
+import Client from 'ioredis'
+import Redlock from 'redlock'
+
+const redis = new Client('6379', 'localhost')
+const redlock = new Redlock([redis], {
+  driftFactor: 0.01,
+  retryCount: 10,
+  retryDelay: 200,
+  retryJitter: 200,
+  automaticExtensionThreshold: 500,
+})
 async function refreshAccessToken(tokenObject) {
   try {
-    // Get a new set of tokens with a refreshToken
-    console.log('in refresh', tokenObject.refreshToken)
     const tokenResponse = await axios.get('/auth/refresh', {
       headers: {
         Authorization: `Bearer ${tokenObject.refreshToken}`,
+        'Token-Id': tokenObject.tokenId,
       },
     })
-
     return {
       ...tokenObject,
       accessToken: tokenResponse.data.accessToken,
@@ -25,7 +35,7 @@ async function refreshAccessToken(tokenObject) {
       accessTokenExpires: tokenResponse.data.accessTokenExpires,
     }
   } catch (error) {
-    console.log('refresh error', error.response.data)
+    //console.log('refresh error', error.response.data)
     return {
       ...tokenObject,
       error: 'RefreshAccessTokenError',
@@ -73,9 +83,7 @@ export default NextAuth({
   ],
   callbacks: {
     async jwt({ token, user, account, profile }) {
-
       if (account && user) {
-       // console.log(user)
         let data = {}
         switch (account.provider) {
           case 'google':
@@ -87,27 +95,60 @@ export default NextAuth({
           default:
             data = user
         }
-        console.log('user ',user)
-        token.refreshToken = data.refreshToken
-        token.accessToken = data.accessToken
-        token.accessTokenExpires = data.accessTokenExpires
-        token.type = data.type
-        token.user = data.user
+        token = {
+          refreshToken: data?.refreshToken,
+          accessToken: data?.accessToken,
+          tokenId: data?.tokenId,
+          accessTokenExpires: data?.accessTokenExpires,
+          type: data?.type,
+          user: data?.user,
+        }
+
+        await redis.set(`token:${token.tokenId}`, JSON.stringify(token))
         return token
       }
 
       // Return previous token if the access token has not expired yet
-      if (Date.now() < token.accessTokenExpires) {
-        console.log('not expired yet' , Date.now(), token.accessTokenExpires)
+      const expires = dayjs(token.accessTokenExpires)
+      const diff = expires.diff(dayjs(), 'second')
+      if (diff > 0) {
+        //console.log('not expired')
         return token
       }
-      // Access token has expired, try to update it
 
-      //console.log('expired yet' , Date.now(), token.accessTokenExpires)
-      token = await refreshAccessToken(token)
+      // Access token has expired, try to do a refresh
+      return await redlock.using(
+        [token.tokenId, 'jwt-refresh'],
+        5000,
+        async () => {
+          // Always get the refresh_token from redis, that's the source of truth
+          // NEVER get the refresh_token from the current jwt property
+          const redisToken = await redis.get(`token:${token.tokenId}`)
+          const currentToken = JSON.parse(redisToken)
 
-      //console.log(token)
-      return token
+          // This can happen when the there are multiple requests
+          // and the first request already refreshed the tokens
+          // so the consecutive requests already have access to the updated tokens
+          const expires = dayjs(token.accessTokenExpires)
+          const diff = expires.diff(dayjs(), 'second')
+          if (diff > 0) {
+            return currentToken
+          }
+
+          // If it's the first request to refresh the tokens then
+          // get your new tokens here, something like this:
+          const newTokens = await refreshAccessToken(currentToken)
+
+          // Save new jwt token object to redis for the next requests
+          await redis.set(
+            `token:${newTokens.tokenId}`,
+            JSON.stringify(newTokens),
+          )
+
+          // Return new jwt token
+          return newTokens
+        },
+      )
     },
     async session({ session, token }) {
       session.accessToken = token.accessToken
@@ -128,20 +169,20 @@ export default NextAuth({
     signOut: async message => {
       //console.log(message)
       try {
-        const response = await axios.post('/auth/sign-out', {
-          refreshToken: message.token.refreshToken,
-        },{
-          headers: {
-            Authorization: `Bearer ${message.token.accessToken}`,
-          }
-        })
+        const response = await axios.post(
+          '/auth/sign-out',{},
+          {
+            headers: {
+              Authorization: `Bearer ${message.token.accessToken}`,
+              'Token-Id': message.token.tokenId,
+            },
+          },
+        )
 
-        if(response.status == 200){
+        if (response.status == 200) {
           //console.log(response.data)
         }
-      } catch (error) {
-
-      }
+      } catch (error) {}
     },
   },
   pages: {

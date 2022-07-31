@@ -7,8 +7,9 @@ import ThemeToggle from '../components/ThemeToggle'
 import { Switch } from '@mantine/core'
 import axios, { axiosPrivate } from '../libs/axios'
 
-import { apiRequest, useMe, useSendMail, useSession , useDevices} from '../hooks/api'
+import { apiRequest, useMe, useSendMail, useSession, useDevices } from '../hooks/api'
 import { mutate } from 'swr'
+import { useEffect } from 'react'
 const styles = {
   // Move long class sets out of jsx to keep it scannable
   container: ({ hasBackground }: { hasBackground: boolean }) => [
@@ -21,17 +22,19 @@ const Index = () => {
 
   const { session, mutate } = useSession()
   //console.log(session)
-  const {devices,isLoading} =  useDevices() 
+  const { devices, isLoading } = useDevices()
 
   //const { me, } = useMe()
+
+ 
   console.log(devices)
   const test = async () => {
     await apiRequest('/user/me')
-    
+
   }
 
-  const handleSignOut = ()=>{
-    
+  const handleSignOut = () => {
+
   }
   return (
     <div >
@@ -54,7 +57,7 @@ const Index = () => {
             <Switch />
           </div>
         </div>
-        {devices && devices.map((device:any)=>(
+        {devices && devices.map((device: any) => (
           <p>{device.createdAt}</p>
         ))}
         <Button variant="primary" onClick={() => signOut()}>Sign Out</Button>

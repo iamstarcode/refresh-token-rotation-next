@@ -12,7 +12,8 @@ const fetcher = async (url: string) => {
     .then(res => {
       //console.log('session ', dayjs(res.data.accessTokenExpires).format('m:s'))
       if (res.data?.error === 'RefreshAccessTokenError') {
-        console.log('error')
+        //console.log('error')
+        signOut()
         //if (res.status == 403) signOut() // display session expired
       }
       return res.data

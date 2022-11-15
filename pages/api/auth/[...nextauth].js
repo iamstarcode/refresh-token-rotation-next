@@ -68,13 +68,8 @@ const Auth = (req, res) =>
         authorize: async credentials => {
           let user = {}
           const userAgent = generateUserAgent(req.headers['user-agent'])
-
-          console.log('befprghghyge')
-          console.log(userAgent)
-          const stringyUserAgent =  JSON.stringify(userAgent)
-          console.log(stringyUserAgent)
-
-
+          const stringyUserAgent = JSON.stringify(userAgent)
+          //console.log(stringyUserAgent)
           try {
             const response = await axios.post(
               '/auth/sign-in',

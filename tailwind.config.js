@@ -1,5 +1,6 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode:'class',
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -7,16 +8,16 @@ module.exports = {
         ribbon: '#0047ff',
       },
       backgroundColor: {
-        primary: "var(--bg-primary)",
-        secondary: "var(--bg-secondary)",
-        tertiary: "var(--color-primary)",
-        base:"var(--base-100)"
+        primary: 'var(--bg-primary)',
+        secondary: 'var(--bg-secondary)',
+        tertiary: 'var(--color-primary)',
+        base: 'var(--base-100)',
       },
       textColor: {
-        primary: "var(--text-primary)",
-        secondary: "var(--text-secondary)",
-        tertiary: "var(--color-primary)"
-      }
+        primary: 'var(--text-primary)',
+        secondary: 'var(--text-secondary)',
+        tertiary: 'var(--color-primary)',
+      },
     },
   },
   plugins: [],

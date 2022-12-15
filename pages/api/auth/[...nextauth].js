@@ -45,6 +45,7 @@ async function refreshAccessToken(tokenObject) {
         'Token-Id': tokenObject.tokenId,
       },
     })
+    //console.log('refresh', tokenResponse.data)
     return {
       ...tokenObject,
       accessToken: tokenResponse.data.accessToken,
@@ -87,7 +88,7 @@ const Auth = (req, res) =>
 
             if (response.status == 201) {
               user = response.data
-              console.log(response.data)
+              //console.log(response.data)
               return user
             }
           } catch (e) {

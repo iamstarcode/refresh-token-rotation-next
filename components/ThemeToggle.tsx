@@ -1,23 +1,19 @@
-import {useContext} from "react"
-import "twin.macro"
-
-import { ThemeContext } from "../components/ThemeContext"
-
+import { useTheme } from 'next-themes'
 const ThemeToggle = () => {
-  const { theme, setTheme } = useContext(ThemeContext)
+  const { theme, setTheme } = useTheme()
 
   function isDark() {
-    return theme === "dark"
+    return theme === 'dark'
   }
 
   return (
-    <div tw="flex flex-col items-center space-y-10 bg-secondary p-10 rounded-lg">
-      <h1 tw="text-lg font-bold text-tertiary uppercase">
-        {isDark() ? "Dark" : "Light"} Mode
+    <div className="flex flex-col items-center space-y-10 bg-secondary p-10 rounded-lg">
+      <h1 className="text-lg font-bold text-tertiary uppercase">
+        {isDark() ? 'Dark' : 'Light'} Mode
       </h1>
       <button
-        tw="w-6 h-6 focus:outline-none fill-current text-primary hover:text-secondary"
-        onClick={() => setTheme(isDark() ? "light" : "dark")}
+        className="w-6 h-6 focus:outline-none fill-current text-primary hover:text-secondary"
+        onClick={() => setTheme(isDark() ? 'light' : 'dark')}
       >
         {isDark() ? <Moon /> : <Sun />}
       </button>

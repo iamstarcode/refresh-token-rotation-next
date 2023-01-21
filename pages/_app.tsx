@@ -1,3 +1,4 @@
+import '../styles/globals.css'
 import { AppProps } from 'next/app'
 
 import { ThemeProvider } from 'next-themes'
@@ -8,12 +9,12 @@ export default function App({
   pageProps: { session, ...pageProps },
 }: AppProps) {
   return (
-    <ThemeProvider>
-      <SessionProvider session={session}>
-        <div className="flex flex-col max-w-7xl mx-auto w-full items-center ">
+    <SessionProvider session={session}>
+      <ThemeProvider>
+        <div className="max-w-7xl mx-auto p-6">
           <Component {...pageProps} />
         </div>
-      </SessionProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </SessionProvider>
   )
 }

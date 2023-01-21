@@ -5,7 +5,6 @@ import { DefaultSession } from 'next-auth'
 declare module 'next-auth/jwt' {
   interface JWT {
     /** The user's role. */
-    userRole?: 'admin'
     accessTokenExpires?: string
     tokenId?: string
     accessToken?: string

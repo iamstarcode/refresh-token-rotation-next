@@ -1,38 +1,35 @@
 import { signOut, getSession } from 'next-auth/react'
 
 import { useMe } from '../hooks/api'
-import ThemeToggle from '../components/ThemeToggle'
-import ClientOnly from '../components/ClientOnly'
-
-const Page = () => {
-  //console.log(session)
+import { ClientOnly, ThemeToggle } from '../components'
+const Index = () => {
   const { me, isLoading, mutate } = useMe()
 
   const handleSignOut = async () => {
-    const session = await getSession()
-    console.log(session)
-
+    const session = await getSession() //get session before signing out
     if (session) {
       signOut()
     }
   }
   return (
     <div>
-      <div className="w-full flex flex-col justify-center gap-y-5 mt-5">
-        <ClientOnly>
-          <ThemeToggle />
-        </ClientOnly>
+      <div className="flex flex-col w-96 mx-auto items-center justify-center gap-y-5 mt-5">
+        <div className="w-60">
+          <ClientOnly>
+            <ThemeToggle />
+          </ClientOnly>
+        </div>
 
         <button
           onClick={() => handleSignOut()}
-          className="bg-red-700 mt-10 px-2 py-3 rounded text-white"
+          className="w-full bg-red-700 mt-10 px-2 py-3 rounded text-white"
         >
           Sign Out
         </button>
-        <div className="w-80 flex flex-col  items-center space-y-2 p-5 bg-gray-300 text-secondary rounded-lg shadow">
+        <div className="w-full flex flex-col  items-center space-y-2 p-5 bg-gray-300 text-secondary rounded-lg shadow">
           <button
             onClick={() => mutate()}
-            className="px-2 py-3 bg-green-400 rounded shadow "
+            className="w-full px-2 py-3 bg-green-400 rounded shadow "
           >
             Protected endpoint
           </button>
@@ -43,5 +40,4 @@ const Page = () => {
   )
 }
 
-//Page.auth = true
-export default Page
+export default Index

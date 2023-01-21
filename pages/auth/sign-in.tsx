@@ -1,9 +1,8 @@
-import { useEffect, useReducer, useState } from 'react'
+import { useReducer } from 'react'
 
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 
-//import { GetServerSideProps } from 'next'
 import { getSession, signIn } from 'next-auth/react'
 
 import { GetServerSideProps } from 'next'

@@ -10,27 +10,11 @@ import {
 } from '../../../utils/AuthFlowHelpers'
 import dayjs from 'dayjs'
 
-import { getSession } from 'next-auth/react'
-//import { UAParser } from 'ua-parser-js'
-
 var UAParser = require('ua-parser-js')
 
 import Client from 'ioredis'
 import Redlock from 'redlock'
 
-/* const redis = new Client('redis://:p75614420629ae32a6542ad6078667e192005620b7be56c15cc412d95ea3bd110@ec2-44-205-222-104.compute-1.amazonaws.com:29060',{
-  tls:{
-    rejectUnauthorized:false
-  }
-})
- */
-/* const redis = new Client(
-  '17099',
-  'redis-17099.c57.us-east-1-4.ec2.cloud.redislabs.com',
-  {
-    password: 'bqhC8452trFGW5bOV1ypISCxdzRZxeEA',
-  },
-) */
 const redis = new Client(6379, 'localhost', {})
 
 const redlock = new Redlock([redis], {

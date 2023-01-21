@@ -1,6 +1,5 @@
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useReducer } from 'react'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { GetServerSideProps } from 'next'
@@ -8,28 +7,32 @@ import { GetServerSideProps } from 'next'
 import { getSession, signIn } from 'next-auth/react'
 
 import { axiosPrivate } from '../../libs/axios'
-import Layout from '../../layouts/default'
 
-export interface RegisterProps {}
+interface IFormValues {
+  email?: string
+  password?: string
+}
+const initiialFormValues: IFormValues = { email: '', password: '' }
 
-const Register = ({}: RegisterProps) => {
-  //const { session, setSession } = useSession()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+const Register = () => {
   const router = useRouter()
+  const [formValues, setFormValues] = useReducer(
+    (prev: IFormValues, next: IFormValues) => {
+      return { ...prev, ...next }
+    },
+    initiialFormValues,
+  )
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     try {
       const response = await axiosPrivate.post('/auth/sign-up', {
-        email,
-        password,
+        ...formValues,
       })
 
       if (response.status == 201) {
         const response: any = await signIn('credentials', {
-          email,
-          password,
+          ...formValues,
           callbackUrl: `${window.location.origin}/`,
           redirect: false,
         })
@@ -61,8 +64,12 @@ const Register = ({}: RegisterProps) => {
               Email
             </label>
             <input
-              onChange={(e: any) => setEmail(e.target.value)}
-              value={email}
+              onChange={(e: any) =>
+                setFormValues({
+                  email: e.target.value,
+                })
+              }
+              value={formValues.email}
               className="w-full bg-gray-100 px-4 py-2 rounded-lg focus:outline-none"
               type="text"
               name="email"
@@ -75,8 +82,8 @@ const Register = ({}: RegisterProps) => {
               Password
             </label>
             <input
-              onChange={(e: any) => setPassword(e.target.value)}
-              value={password}
+              onChange={(e: any) => setFormValues({ password: e.target.value })}
+              value={formValues.password}
               className="w-full bg-gray-100 px-4 py-2 rounded-lg focus:outline-none"
               type="password"
               name="password"
@@ -102,13 +109,13 @@ const Register = ({}: RegisterProps) => {
   )
 }
 
-Register.getLayout = function getLayout(page: ReactElement) {
+/* Register.getLayout = function getLayout(page: ReactElement) {
   return (
     <Layout>
       <div className="w-full px-4 py-5">{page}</div>
     </Layout>
   )
-}
+} */
 
 export const getServerSideProps: GetServerSideProps = async context => {
   const session = await getSession(context)

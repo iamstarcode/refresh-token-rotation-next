@@ -1,4 +1,4 @@
-import { ReactElement, useReducer } from 'react'
+import { useReducer } from 'react'
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -108,14 +108,6 @@ const Register = () => {
     </>
   )
 }
-
-/* Register.getLayout = function getLayout(page: ReactElement) {
-  return (
-    <Layout>
-      <div className="w-full px-4 py-5">{page}</div>
-    </Layout>
-  )
-} */
 
 export const getServerSideProps: GetServerSideProps = async context => {
   const session = await getSession(context)

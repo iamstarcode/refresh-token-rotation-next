@@ -1,16 +1,9 @@
 import NextAuth, { NextAuthOptions } from 'next-auth'
 
 import CredentialsProvider from 'next-auth/providers/credentials'
-import GoogleProvider from 'next-auth/providers/google'
-import FacebookProvider from 'next-auth/providers/facebook'
-import axios from '../../../libs/axios'
-import {
-  googleAuthFlow,
-  faceBookAuthFlow,
-} from '../../../utils/AuthFlowHelpers'
-import dayjs from 'dayjs'
 
-var UAParser = require('ua-parser-js')
+import axios from '../../../libs/axios'
+import dayjs from 'dayjs'
 
 import Client from 'ioredis'
 import Redlock from 'redlock'
@@ -49,45 +42,18 @@ async function refreshAccessToken(tokenObject: any) {
   }
 }
 
-function generateUserAgent(userAgent: any) {
-  let device: any = {}
-  const parser = new UAParser(userAgent)
-  if (parser.getDevice().model == undefined) {
-    //web browser
-    device.appType = parser.getBrowser().name
-    device.device = parser.getOS().name + ' ' + parser.getOS().version
-  } else {
-    // a mobile web browser
-    device.device = `${parser.getDevice().vendor}  ${parser.getDevice().model}`
-    device.appType = parser.getBrowser().name
-  }
-
-  return device
-}
-
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'credentials',
       async authorize(credentials: any, req): Promise<any | null> {
         let user = {}
-        const userAgent = generateUserAgent(req.headers['user-agent'])
-        const stringyUserAgent = JSON.stringify(userAgent)
 
         try {
-          const response = await axios.post(
-            '/auth/sign-in',
-            {
-              email: credentials?.email,
-              password: credentials?.password,
-            },
-            {
-              headers: {
-                'user-agent': req.headers['user-agent'],
-                'x-user-agent': stringyUserAgent,
-              },
-            },
-          )
+          const response = await axios.post('/auth/sign-in', {
+            email: credentials?.email,
+            password: credentials?.password,
+          })
 
           if (response.status == 201) {
             user = response.data
@@ -100,36 +66,12 @@ export const authOptions: NextAuthOptions = {
       },
       credentials: {},
     }),
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
-      authorization: {
-        params: {
-          prompt: 'consent',
-          access_type: 'offline',
-          response_type: 'code',
-        },
-      },
-    }),
-    FacebookProvider({
-      clientId: process.env.FACEBOOK_CLIENT_ID ?? '',
-      clientSecret: process.env.FACEBOOK_CLIENT_SECRET ?? '',
-    }),
   ],
   callbacks: {
-    async jwt({ token, user, account, profile }) {
-      if (account && user) {
-        let data: any = {}
-        switch (account.provider) {
-          case 'google':
-            data = await googleAuthFlow(profile)
-            break
-          case 'facebook':
-            data = await faceBookAuthFlow(profile)
-            break
-          default:
-            data = user
-        }
+    async jwt({ token, user }) {
+      if (user) {
+        let data: any = user
+
         token = {
           refreshToken: data?.refreshToken,
           accessToken: data?.accessToken,

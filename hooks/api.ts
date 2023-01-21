@@ -2,7 +2,7 @@ import useSWR from 'swr'
 import { getSession, signOut } from 'next-auth/react'
 import { axiosPrivate } from '../libs/axios'
 
-export const fetcher = async (url: string) => {
+const fetcher = async (url: string) => {
   const session = await getSession()
 
   if (session?.error) {
